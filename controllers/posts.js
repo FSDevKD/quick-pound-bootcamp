@@ -1,5 +1,6 @@
 const cloudinary = require("../middleware/cloudinary");
 const Post = require("../models/Post");
+const Comment = require("../models/Comment");
 
 module.exports = {
   getProfile: async (req, res) => {
@@ -20,7 +21,7 @@ module.exports = {
   },
   getPost: async (req, res) => {
     try {
-      const post = await Post.findById(req.params.id);
+      const post = await Post.findById(req.params.id).populate("comments")
       res.render("post.ejs", { post: post, user: req.user });
     } catch (err) {
       console.log(err);
@@ -73,4 +74,35 @@ module.exports = {
       res.redirect("/profile");
     }
   },
+
+ createComment: async (req, res) => {
+  try {
+    const newComment = await Comment.create({
+      content: req.body.comment,
+      user: req.user.id,
+      post: req.params.id,
+    });
+    await Post.findByIdAndUpdate(req.params.id, {
+      $push: { comments: newComment },
+    });
+    console.log("Comment has been added!");
+    res.redirect(`/post/${req.params.id}`);
+  } catch (err) {
+    console.log(err);
+  }
+},
+
+
+  addComment: async (req, res) => {
+    try {
+      const { content } = req.body;
+      const newComment = await Comment.create({ content, post: req.params.id, user: req.user.id });
+
+      await Post.findByIdAndUpdate(req.params.id, { $push: {comments: newComment._id},})
+      res.redirect("/post/${req.params.id}");
+    } catch (err) {
+      console.log(err);
+      res.redirect("/post/${req.params.id}");
+    }
+  }
 };

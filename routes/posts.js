@@ -13,4 +13,8 @@ router.put("/likePost/:id", postsController.likePost);
 
 router.delete("/deletePost/:id", postsController.deletePost);
 
+router.post("/createComment/:id", postsController.createComment);
+
+router.post("/addComment/:id", ensureAuth, postsController.addComment);
+
 module.exports = router;
